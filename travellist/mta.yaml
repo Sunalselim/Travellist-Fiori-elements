@@ -1,0 +1,69 @@
+_schema-version: "3.2"
+ID: travellist
+description: travellist App
+version: 0.0.1
+modules:
+- name: travellist-dest-content
+  type: com.sap.application.content
+  requires:
+  - name: travellist-destination-service
+    parameters:
+      content-target: true
+  - name: travellist-repo-host
+    parameters:
+      service-key:
+        name: travellist-repo-host-key
+  - name: travellist-uaa
+    parameters:
+      service-key:
+        name: travellist-uaa-key
+  parameters:
+    content:
+      instance:
+        destinations:
+        - Name: travellist_repo_host
+          ServiceInstanceName: travellist-html5-srv
+          ServiceKeyName: travellist-repo-host-key
+          sap.cloud.service: travellist
+        - Authentication: OAuth2UserTokenExchange
+          Name: travellist_uaa
+          ServiceInstanceName: travellist-xsuaa-srv
+          ServiceKeyName: travellist-uaa-key
+          sap.cloud.service: travellist
+        existing_destinations_policy: update
+  build-parameters:
+    no-source: true
+resources:
+- name: travellist-uaa
+  type: org.cloudfoundry.managed-service
+  parameters:
+    path: ./xs-security.json  
+    service: xsuaa
+    service-name: travellist-xsuaa-srv
+    service-plan: application
+- name: travellist-destination-service
+  type: org.cloudfoundry.managed-service
+  parameters:
+    config:
+      HTML5Runtime_enabled: true
+      version: 1.0.0
+      init_data:
+        instance:
+          existing_destinations_policy: update
+          destinations:
+          - Name: ui5
+            Type: HTTP
+            URL: https://ui5.sap.com
+            ProxyType: Internet
+            Authentication: NoAuthentication
+    service: destination
+    service-name: travellist-destination-service
+    service-plan: lite
+- name: travellist-repo-host
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: html5-apps-repo
+    service-name: travellist-html5-srv
+    service-plan: app-host
+parameters:
+  deploy_mode: html5-repo
